@@ -1,0 +1,23 @@
+{{- $fullname := include "room-assistant.fullname" . }}
+{{- $relname := .Release.Name -}}
+{{- $name := include "room-assistant.name" . }}
+{{- $labels := include "room-assistant.labels" . }}
+{{- range $location := .Values.locations }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{  $fullname }}-{{ $location }}
+  labels:
+    {{- $labels | nindent 4 }}
+spec:
+  type: {{ $.Values.service.type }}
+  ports:
+    - port: {{ $.Values.service.clusterPort }}
+      targetPort: cluster
+      protocol: UDP
+      name: cluster
+  selector:
+    app.kubernetes.io/name: {{ $name }}-{{ $location }}
+    app.kubernetes.io/instance: {{ $relname }}
+{{- end }}

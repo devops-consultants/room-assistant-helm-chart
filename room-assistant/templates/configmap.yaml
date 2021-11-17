@@ -1,0 +1,85 @@
+{{ $namespace := .Release.Namespace }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "room-assistant.fullname" . }}-config
+  labels:
+    {{- include "room-assistant.labels" . | nindent 4 }}
+data:
+  config-setup.sh: |
+    #!/bin/bash
+    TEMPLATE_DIR=$1
+    CONFIG_DIR=$2
+    if [ -z "$NODE" ]; then
+      echo "Required environment variable 'NODE' is missing"
+      exit 1
+    fi
+    apt update && apt install -y wget
+    API_RESPONSE="$(wget \
+        --ca-certificate=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+        --header="Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+        --header="Accept: application/json" \
+        -O - \
+        https://kubernetes.default.svc.cluster.local/api/v1/nodes/"$NODE")"
+    if [ "$?" != "0" ]; then
+      echo "Failed getting API response"
+      echo "$API_RESPONSE"
+      exit 1
+    fi
+    # echo "$API_RESPONSE"
+    # JQ_RESPONSE="$(echo "$API_RESPONSE" | \
+    #   jq -r '.metadata.labels["room-assistant/clusterweight"] // "40"')"
+    # if [ "$?" != "0" ]; then
+    #   echo "Failed getting JQ response"
+    #   echo "$JQ_RESPONSE"
+    #   exit 1
+    # fi
+    # echo $JQ_RESPONSE | tee $CONFIG_DIR/labels.txt
+    echo $API_RESPONSE | grep "room-assistant/clusterweight"
+    NODEWEIGHT=$(echo $API_RESPONSE | grep "room-assistant/clusterweight")
+
+
+    WEIGHT=50
+
+    sed -e "s/REPLACEME/$LOCATION/" -e "s/weight: .*$/weight: $WEIGHT/" $TEMPLATE_DIR/local.yaml | tee $CONFIG_DIR/local.yaml
+  local.yaml: |
+    global:
+      instanceName: REPLACEME
+      integrations:
+        {{- range .Values.global.integrations }}
+        - {{ . }}
+        {{- end }}
+    {{- with .Values.homeAssistant }}
+    homeAssistant:
+      mqttUrl: '{{ .mqttUrl }}'
+      mqttOptions:
+        rejectUnauthorized: {{ .mqttOptions.rejectUnauthorized }}
+        {{- if ne .mqttOptions.username ""}}
+        username: {{ .mqttOptions.username }}
+        {{- end }}
+        {{- if ne .mqttOptions.password "" }}
+        password: {{ .mqttOptions.password }}
+        {{- end }}
+      discoveryPrefix: {{ .discoveryPrefix }}
+      sendAttributes: {{ .sendAttributes }}
+      sendMqttRoom: {{ .sendMqttRoom }}
+      mqttRoomPrefix: {{ .mqttRoomPrefix }}
+    {{- end }}
+    cluster:
+      weight: 50
+      autoDiscovery: false
+      peerAddresses:
+        {{- range $location := .Values.locations }}
+        - room-assistant-{{ $location }}.{{ $namespace }}.svc.cluster.local:{{ $.Values.service.clusterPort }}
+        {{- end }}
+
+    bluetoothLowEnergy:
+      allowlist:
+      {{- range .Values.bluetoothLowEnergy.allowlist }}
+      - {{ . }}
+      {{- end }}
+      tagOverrides:
+      {{- range $id, $name := .Values.bluetoothLowEnergy.tagOverrides }}
+        {{ $id }}:
+          {{ $name | toYaml }}
+      {{- end }}

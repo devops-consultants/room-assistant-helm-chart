@@ -1,0 +1,112 @@
+{{- $fullname := include "room-assistant.fullname" . }}
+{{- $relname := .Release.Name -}}
+{{- $name := include "room-assistant.name" . }}
+{{- $labels := include "room-assistant.labels" . }}
+{{- range $location := .Values.locations }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullname }}-{{ $location }}
+  {{- with $.Values.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- $labels | nindent 4 }}
+spec:
+  replicas: {{ $.Values.replicaCount }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}-{{ $location }}
+      app.kubernetes.io/instance: {{ $relname }}
+  template:
+    metadata:
+      {{- with $.Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/name: {{ $name }}-{{ $location }}
+        app.kubernetes.io/instance: {{ $relname }}
+    spec:
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: {{ $fullname }}
+      initContainers:
+        - name: config
+          image: ubuntu:22.04
+          command: ["sh", "/config/config-setup.sh", "/config", "/room-assistant/config"]
+          env:
+            - name: LOCATION
+              value: {{ $location }}
+            - name: NODE
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          resources:
+            requests:
+              cpu: 0.5
+              memory: 64Mi
+            limits:
+              cpu: 1
+              memory: 128Mi
+          volumeMounts:
+          - name: location-config
+            mountPath: /room-assistant/config
+          - name: room-assistant-config
+            mountPath: /config
+      containers:
+        - name: {{ $.Chart.Name }}
+          securityContext:
+            {{- toYaml $.Values.securityContext | nindent 12 }}
+          image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ $.Values.service.metricsPort }}
+              name: metrics
+              protocol: TCP
+            - containerPort: {{ $.Values.service.clusterPort }}
+              name: cluster
+              protocol: UDP
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: metrics
+          resources:
+            {{- toYaml $.Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: location-config
+            mountPath: /room-assistant/config
+      nodeSelector:
+        "room-assistant/location": {{ $location }}
+      {{- with $.Values.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $.Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: location-config
+        emptyDir: {}
+      - name: room-assistant-config
+        configMap:
+          name: {{ $fullname }}-config
+{{- end }}
