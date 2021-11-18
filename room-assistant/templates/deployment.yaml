@@ -47,9 +47,9 @@ spec:
           command: ["sh", "/config/config-setup.sh", "/config", "/room-assistant/config"]
           env:
             - name: LOCATION
-              value: {{ $location.room }}
+              value: "{{ $location.room }}"
             - name: WEIGHT
-              value: {{ $location.weight }}
+              value: "{{ $location.weight }}"
             - name: NODE
               valueFrom:
                 fieldRef:

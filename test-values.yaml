@@ -1,0 +1,28 @@
+# locations:
+#   - office
+#   - bedroom
+#   - kitchen
+
+homeAssistant:
+  mqttUrl: "mqtt://mqtt.coward.cloud:1883"
+  sendMqttRoom: true
+
+bluetoothLowEnergy:
+  allowlist:
+    - c03febd4dd64
+    - d4b06c7dd622
+    - e6575cf2e8c1
+    - 274c281c0a0e4ee788d9140cec1946d8-0-0
+
+  tagOverrides:
+    d4b06c7dd622:
+      name: Sophies Watch
+    c03febd4dd64:
+      name: Robs Watch
+    e6575cf2e8c1:
+      name: Nics Fitbit
+    274c281c0a0e4ee788d9140cec1946d8-0-0:
+      name: Robs Phone
+
+annotations:
+  configmap.reloader.stakater.com/reload: "room-assistant-config"
