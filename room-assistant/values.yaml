@@ -55,12 +55,15 @@ tolerations: []
 
 affinity: {}
 
-locations: []
-
 global:
   integrations:
     - homeAssistant
     - bluetoothLowEnergy
+
+cluster:
+  timeout: 60
+  autoDiscovery: false
+  quorum: 2
 
 homeAssistant:
   mqttUrl: "mqtt://mosquitto:1883"
@@ -76,3 +79,11 @@ homeAssistant:
 bluetoothLowEnergy:
   allowlist: []
   tagOverrides: {}
+
+locations:
+  - room: office
+    weight: 100
+  - room: kitchen
+    weight: 50
+  - room: bedroom
+    weight: 70

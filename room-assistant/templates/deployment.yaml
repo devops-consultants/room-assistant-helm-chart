@@ -7,7 +7,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $fullname }}-{{ $location }}
+  name: {{ $fullname }}-{{ $location.room }}
   {{- with $.Values.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -20,7 +20,7 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ $name }}-{{ $location }}
+      app.kubernetes.io/name: {{ $name }}-{{ $location.room }}
       app.kubernetes.io/instance: {{ $relname }}
   template:
     metadata:
@@ -29,7 +29,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        app.kubernetes.io/name: {{ $name }}-{{ $location }}
+        app.kubernetes.io/name: {{ $name }}-{{ $location.room }}
         app.kubernetes.io/instance: {{ $relname }}
     spec:
       {{- with $.Values.imagePullSecrets }}
@@ -47,7 +47,9 @@ spec:
           command: ["sh", "/config/config-setup.sh", "/config", "/room-assistant/config"]
           env:
             - name: LOCATION
-              value: {{ $location }}
+              value: {{ $location.room }}
+            - name: WEIGHT
+              value: {{ $location.weight }}
             - name: NODE
               valueFrom:
                 fieldRef:
@@ -91,7 +93,7 @@ spec:
           - name: location-config
             mountPath: /room-assistant/config
       nodeSelector:
-        "room-assistant/location": {{ $location }}
+        "room-assistant/location": {{ $location.room }}
       {{- with $.Values.nodeSelector }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
