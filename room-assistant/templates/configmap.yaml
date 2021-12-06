@@ -15,10 +15,11 @@ data:
       exit 1
     fi
     CLUSTER_WEIGHT=${WEIGHT:-50}
+    echo "  peerAddresses:" > $CONFIG_DIR/peers.txt
     {{- range $location := .Values.locations }}
-    getent hosts room-assistant-{{ $location.room }}
+    getent hosts room-assistant-{{ $location.room }} | awk '{print "    - " . $1 . ":6452"}' >> $CONFIG_DIR/peers.txt
     {{- end }}
-
+    cat $CONFIG_DIR/peers.txt
 
     sed -e "s/REPLACEME/$LOCATION/" -e "s/weight: .*$/weight: $CLUSTER_WEIGHT/" $TEMPLATE_DIR/local.yaml | tee $CONFIG_DIR/local.yaml
   local.yaml: |
