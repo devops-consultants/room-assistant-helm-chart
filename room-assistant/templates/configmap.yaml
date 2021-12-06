@@ -17,7 +17,7 @@ data:
     CLUSTER_WEIGHT=${WEIGHT:-50}
     echo "  peerAddresses:" > $CONFIG_DIR/peers.txt
     {{- range $location := .Values.locations }}
-    getent hosts room-assistant-{{ $location.room }} | awk '{print "    - " . $1 . ":6452"}' >> $CONFIG_DIR/peers.txt
+    getent hosts room-assistant-{{ $location.room }} | awk '{printf "    - %s:6452", $1}' >> $CONFIG_DIR/peers.txt
     {{- end }}
     cat $CONFIG_DIR/peers.txt
 
