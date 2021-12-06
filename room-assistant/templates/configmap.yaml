@@ -15,13 +15,13 @@ data:
       exit 1
     fi
     CLUSTER_WEIGHT=${WEIGHT:-50}
-    echo "  peerAddresses:" > $CONFIG_DIR/peers.txt
+    echo -n "" > $CONFIG_DIR/peers.txt
     {{- range $location := .Values.locations }}
     getent hosts room-assistant-{{ $location.room }} | awk '{printf "    - %s:6452\n", $1}' >> $CONFIG_DIR/peers.txt
     {{- end }}
-    PEERS=$(cat $CONFIG_DIR/peers.txt)
+    cat $CONFIG_DIR/peers.txt
 
-    sed -e "s/REPLACEME/$LOCATION/" -e "s/weight: .*$/weight: $CLUSTER_WEIGHT/" -e "s/PEERS/$PEERS/" $TEMPLATE_DIR/local.yaml | tee $CONFIG_DIR/local.yaml
+    sed -e "s/REPLACEME/$LOCATION/" -e "s/weight: .*$/weight: $CLUSTER_WEIGHT/" -e "s/peerAddresses:/r $CONFIG_DIR/peers.txt" $TEMPLATE_DIR/local.yaml | tee $CONFIG_DIR/local.yaml
   local.yaml: |
     global:
       instanceName: REPLACEME
@@ -50,7 +50,7 @@ data:
       quorum: {{ .Values.cluster.quorum }}
       autoDiscovery: {{ $.Values.cluster.autoDiscovery }}
       {{- if ne $.Values.cluster.autoDiscovery true }}
-      #peerAddresses:
+      peerAddresses:
         {{- range $location := .Values.locations }}
       #  - room-assistant-{{ $location.room }}:{{ $.Values.service.clusterPort }}
         {{- end }}
