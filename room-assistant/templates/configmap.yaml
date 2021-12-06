@@ -21,7 +21,7 @@ data:
     {{- end }}
     cat $CONFIG_DIR/peers.txt
 
-    sed -e "s/REPLACEME/$LOCATION/" -e "s/weight: .*$/weight: $CLUSTER_WEIGHT/" -e "s/peerAddresses:/r $CONFIG_DIR/peers.txt" $TEMPLATE_DIR/local.yaml | tee $CONFIG_DIR/local.yaml
+    sed -e "s/REPLACEME/$LOCATION/" -e "s/weight: .*$/weight: $CLUSTER_WEIGHT/" -e "/peerAddresses:/r $CONFIG_DIR/peers.txt" $TEMPLATE_DIR/local.yaml | tee $CONFIG_DIR/local.yaml
   local.yaml: |
     global:
       instanceName: REPLACEME
