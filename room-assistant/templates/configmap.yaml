@@ -54,7 +54,6 @@ data:
         {{- range $location := .Values.locations }}
       #  - room-assistant-{{ $location.room }}:{{ $.Values.service.clusterPort }}
         {{- end }}
-      PEERS
       {{- end }}
 
     bluetoothLowEnergy:
