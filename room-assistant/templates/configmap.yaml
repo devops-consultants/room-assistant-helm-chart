@@ -1,4 +1,5 @@
 {{ $namespace := .Release.Namespace }}
+{{- $name := include "room-assistant.name" . }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -15,13 +16,8 @@ data:
       exit 1
     fi
     CLUSTER_WEIGHT=${WEIGHT:-50}
-    echo -n "" > $CONFIG_DIR/peers.txt
-    {{- range $location := .Values.locations }}
-    getent hosts room-assistant-{{ $location.room }} | awk '{printf "    - %s:6452\n", $1}' >> $CONFIG_DIR/peers.txt
-    {{- end }}
-    cat $CONFIG_DIR/peers.txt
 
-    sed -e "s/REPLACEME/$LOCATION/" -e "s/weight: .*$/weight: $CLUSTER_WEIGHT/" -e "/peerAddresses:/r $CONFIG_DIR/peers.txt" $TEMPLATE_DIR/local.yaml | tee $CONFIG_DIR/local.yaml
+    sed -e "s/REPLACEME/$LOCATION/" -e "s/weight: .*$/weight: $CLUSTER_WEIGHT/" $TEMPLATE_DIR/local.yaml | tee $CONFIG_DIR/local.yaml
   local.yaml: |
     global:
       instanceName: REPLACEME
@@ -52,7 +48,7 @@ data:
       {{- if ne $.Values.cluster.autoDiscovery true }}
       peerAddresses:
         {{- range $location := .Values.locations }}
-      #  - room-assistant-{{ $location.room }}:{{ $.Values.service.clusterPort }}
+        - {{ $name }}-{{ $location.room }}.{{ $.Values.service.serviceDomain }}:{{ $.Values.service.clusterPort }}
         {{- end }}
       {{- end }}
 

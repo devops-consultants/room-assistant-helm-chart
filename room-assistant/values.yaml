@@ -32,9 +32,11 @@ securityContext:
   # runAsUser: 1000
 
 service:
-  type: ClusterIP
+  type: LoadBalancer
   clusterPort: 6425
   metricsPort: 6415
+  serviceDomain: local
+  annotations: {}
 
 resources:
   {}
