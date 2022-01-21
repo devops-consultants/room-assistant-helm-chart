@@ -79,6 +79,7 @@ homeAssistant:
   mqttRoomPrefix: room-assistant/mqtt-room
 
 bluetoothLowEnergy:
+  maxDistance: 10
   allowlist: []
   tagOverrides: {}
 

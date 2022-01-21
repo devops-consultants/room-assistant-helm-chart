@@ -16,8 +16,9 @@ data:
       exit 1
     fi
     CLUSTER_WEIGHT=${WEIGHT:-50}
+    MAX_DISTANCE=${MAX_DISTANCE:-{{ .Values.bluetoothLowEnergy.maxDistance }}}
 
-    sed -e "s/REPLACEME/$LOCATION/" -e "s/weight: .*$/weight: $CLUSTER_WEIGHT/" $TEMPLATE_DIR/local.yaml | tee $CONFIG_DIR/local.yaml
+    sed -e "s/REPLACEME/$LOCATION/" -e "s/weight: .*$/weight: $CLUSTER_WEIGHT/" -e "s/maxDistance: .*$/maxDistance: $MAX_DISTANCE/" $TEMPLATE_DIR/local.yaml | tee $CONFIG_DIR/local.yaml
   local.yaml: |
     global:
       instanceName: REPLACEME
@@ -53,6 +54,7 @@ data:
       {{- end }}
 
     bluetoothLowEnergy:
+      maxDistance: {{ .Values.bluetoothLowEnergy.maxDistance }}
       allowlist:
       {{- range .Values.bluetoothLowEnergy.allowlist }}
       - {{ . }}
