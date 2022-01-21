@@ -86,7 +86,10 @@ bluetoothLowEnergy:
 locations:
   - room: office
     weight: 100
+    maxDistance: 2
   - room: kitchen
     weight: 50
+    maxDistance: 8
   - room: bedroom
     weight: 70
+    maxDistance: 5

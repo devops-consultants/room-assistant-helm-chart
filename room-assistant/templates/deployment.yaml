@@ -50,6 +50,8 @@ spec:
               value: "{{ $location.room }}"
             - name: WEIGHT
               value: "{{ $location.weight }}"
+            - name: MAX_DISTANCE
+              value: "{{ $location.maxDistance }}"
             - name: NODE
               valueFrom:
                 fieldRef:
